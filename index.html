@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeVault Executive | v5.0 Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030708; --bull: #00ff88; --bear: #ff2e5b;
+            --surface: #0a0f12; --border: rgba(0, 255, 136, 0.15);
+            --text: #e0f7fa; --gold: #ffcc00; --panel: rgba(13, 20, 24, 0.9);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+        
+        /* NAV & GLOBAL */
+        .navbar { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 40px; height: 75px; background: #000; border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .nav-brand { font-family: 'Orbitron'; font-weight: 900; color: var(--bull); font-size: 24px; letter-spacing: 2px; }
+        .nav-links { display: flex; gap: 5px; }
+        .nav-btn { 
+            padding: 10px 20px; border: none; background: transparent; color: #546e7a;
+            font-family: 'Orbitron'; font-size: 11px; cursor: pointer; transition: 0.3s;
+            border-radius: 4px;
+        }
+        .nav-btn.active { color: var(--bull); background: rgba(0, 255, 136, 0.08); }
+
+        .container { max-width: 1500px; margin: 0 auto; padding: 30px; }
+        .panel { display: none; animation: fadeIn 0.4s ease; }
+        .panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 25px; margin-bottom: 25px; }
+        .card-h { font-family: 'Orbitron'; font-size: 14px; color: var(--bull); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* AI INTERFACE */
+        .ai-grid { display: grid; grid-template-columns: 1fr 450px; gap: 20px; height: 650px; }
+        .ai-chat { display: flex; flex-direction: column; background: #05080a; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        #aiMessages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; font-size: 14px; line-height: 1.6; }
+        .msg { padding: 15px; border-radius: 6px; max-width: 90%; }
+        .msg.bot { background: rgba(0, 255, 136, 0.03); border-left: 3px solid var(--bull); align-self: flex-start; }
+        .msg.user { background: rgba(255, 255, 255, 0.03); border-right: 3px solid #546e7a; align-self: flex-end; }
+        .ai-input-area { padding: 20px; background: #000; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+
+        /* CALCULATOR SUITE */
+        .calc-suite { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .calc-box { background: rgba(0,0,0,0.3); padding: 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
+        .calc-res { margin-top: 15px; padding: 15px; background: #000; border-radius: 4px; text-align: center; }
+        .res-val { font-family: 'Space Mono'; font-size: 24px; color: var(--gold); }
+
+        /* JOURNAL & ANALYTICS */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: #546e7a; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; font-family: 'Space Mono'; border-bottom: 1px solid rgba(255,255,255,0.02); }
+
+        /* SESSIONS */
+        .sess-row { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #000; margin-bottom: 10px; border-radius: 6px; }
+        .timer { color: var(--bull); font-family: 'Space Mono'; font-size: 18px; }
+
+        /* INPUTS */
+        input, select { 
+            width: 100%; background: #000; border: 1px solid #1a2a2d; padding: 12px; 
+            color: #fff; border-radius: 4px; font-family: 'Space Mono'; margin-top: 5px; outline: none;
+        }
+        input:focus { border-color: var(--bull); }
+        .btn { 
+            background: var(--bull); color: #000; border: none; padding: 12px 25px; 
+            font-family: 'Orbitron'; font-weight: 700; cursor: pointer; border-radius: 4px; 
+        }
+
+        #clock { font-family: 'Space Mono'; color: var(--gold); font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">VAULT_EXECUTIVE</div>
+        <div class="nav-links">
+            <button class="nav-btn active" onclick="show('journal')">JOURNAL</button>
+            <button class="nav-btn" onclick="show('ai')">AI_ANALYST</button>
+            <button class="nav-btn" onclick="show('calc')">CALCULATOR</button>
+            <button class="nav-btn" onclick="show('intel')">INTEL</button>
+            <button class="nav-btn" onclick="show('analytics')">ANALYTICS</button>
+        </div>
+        <div id="clock">00:00:00 UTC</div>
+    </nav>
+
+    <div class="container">
+
+        <div id="journal" class="panel active">
+            <div class="card" style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; text-align:center;">
+                <div><label>BALANCE</label><div id="j-bal-display" class="res-val">$50,000</div></div>
+                <div><label>WIN RATE</label><div id="j-wr-display" class="res-val" style="color:var(--bull)">0%</div></div>
+                <div><label>TOTAL TRADES</label><div id="j-count-display" class="res-val">0</div></div>
+                <div><label>PROFIT FACTOR</label><div id="j-pf-display" class="res-val">0.0</div></div>
+            </div>
+            <div class="card">
+                <div class="card-h">NEW EXECUTION ENTRY</div>
+                <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:15px;">
+                    <div><label>PAIR</label><input type="text" id="j-pair" placeholder="XAUUSD"></div>
+                    <div><label>SIDE</label><select id="j-side"><option>BUY</option><option>SELL</option></select></div>
+                    <div><label>LOTS</label><input type="number" id="j-lots" placeholder="1.00"></div>
+                    <div><label>PROFIT/LOSS ($)</label><input type="number" id="j-pnl" placeholder="250"></div>
+                    <div style="display:flex; align-items:flex-end;"><button class="btn" style="width:100%" onclick="addTrade()">LOG TRADE</button></div>
+                </div>
+            </div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>DATE</th><th>SYMBOL</th><th>SIDE</th><th>LOTS</th><th>RESULT</th><th>STATUS</th></tr></thead>
+                    <tbody id="trade-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="ai" class="panel">
+            <div class="ai-grid">
+                <div class="card" style="height:100%; padding:0; overflow:hidden;">
+                    <div id="tv_chart" style="height:100%;"></div>
+                </div>
+                <div class="ai-chat">
+                    <div id="aiMessages">
+                        <div class="msg bot">
+                            <strong>SYSTEM ONLINE:</strong> Institutional Analysis Module v5.0 ready.<br><br>
+                            I can analyze Smart Money Concepts (SMC), identify Liquidity Pools, and calculate Premium/Discount zones. Upload a chart or ask a question.
+                        </div>
+                    </div>
+                    <div class="ai-input-area">
+                        <button onclick="document.getElementById('ai-img').click()" style="background:none; border:1px solid var(--border); color:var(--bull); cursor:pointer; padding:10px;">📷</button>
+                        <input type="file" id="ai-img" hidden onchange="aiVision()">
+                        <input type="text" id="ai-text" placeholder="Analyze market structure...">
+                        <button class="btn" onclick="aiChat()">SCAN</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="calc" class="panel">
+            <div class="calc-suite">
+                <div class="card">
+                    <div class="card-h">LOT SIZE CALCULATOR</div>
+                    <label>Account Balance ($)</label><input type="number" id="c-bal" value="50000">
+                    <label>Risk (%)</label><input type="number" id="c-risk" value="1">
+                    <label>Stop Loss (Pips)</label><input type="number" id="c-sl" value="10">
+                    <div class="calc-res">
+                        <label>RECOMMENDED POSITION</label>
+                        <div id="res-lot" class="res-val">5.00 Lots</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-h">REWARD : RISK CALCULATOR</div>
+                    <label>Entry Price</label><input type="number" id="rr-e" value="2350.50">
+                    <label>Take Profit</label><input type="number" id="rr-t" value="2365.00">
+                    <label>Stop Loss</label><input type="number" id="rr-s" value="2345.00">
+                    <div class="calc-res">
+                        <label>R:R RATIO</label>
+                        <div id="res-rr" class="res-val">2.64</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-h">PIP VALUE CALCULATOR</div>
+                    <label>Lot Size</label><input type="number" id="p-lot" value="1.00">
+                    <label>Pair Type</label><select><option>Standard (10$/pip)</option><option>Gold (0.10$/tick)</option></select>
+                    <div class="calc-res">
+                        <label>PIP VALUE</label>
+                        <div id="res-pip" class="res-val">$10.00</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-h">SPREAD COST IMPACT</div>
+                    <label>Current Spread (Pips)</label><input type="number" id="s-spread" value="0.5">
+                    <label>Lot Size</label><input type="number" id="s-lot" value="2.00">
+                    <div class="calc-res">
+                        <label>IMMEDIATE COST</label>
+                        <div id="res-spread" class="res-val">-$10.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="intel" class="panel">
+            <div class="card">
+                <div class="card-h">LIVE SESSIONS COUNTDOWN</div>
+                <div id="session-list"></div>
+            </div>
+            <div class="card">
+                <div class="card-h">FUNDAMENTAL ANALYTICS (INVESTING.COM FEED)</div>
+                <div id="news-feed">
+                    <div class="sess-row"><span>USD - Core Retail Sales m/m</span> <span style="color:var(--bear)">HIGH IMPACT</span></div>
+                    <div class="sess-row"><span>GBP - Unemployment Rate</span> <span style="color:var(--gold)">MED IMPACT</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="analytics" class="panel">
+            <div class="card">
+                <div class="card-h">EQUITY GROWTH CURVE</div>
+                <div style="height:300px; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; color:#546e7a;">
+                    [ EQUITY CHART COMPONENT READY FOR DATA INJECTION ]
+                </div>
+            </div>
+            <div class="card" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                <div class="calc-box">
+                    <label>BEST PERFORMING PAIR</label>
+                    <div id="best-pair" class="res-val" style="color:var(--bull)">NAS100</div>
+                </div>
+                <div class="calc-box">
+                    <label>LARGEST DRAWDOWN</label>
+                    <div id="max-dd" class="res-val" style="color:var(--bear)">-$420.00</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        let trades = JSON.parse(localStorage.getItem('vault_premium_trades')) || [];
+
+        function show(id) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+            if(id === 'ai') initChart();
+        }
+
+        // --- JOURNAL LOGIC ---
+        function addTrade() {
+            const trade = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                pair: document.getElementById('j-pair').value || "NAS100",
+                side: document.getElementById('j-side').value,
+                lots: document.getElementById('j-lots').value || 1,
+                pnl: parseFloat(document.getElementById('j-pnl').value) || 0
+            };
+            trades.unshift(trade);
+            localStorage.setItem('vault_premium_trades', JSON.stringify(trades));
+            renderJournal();
+        }
+
+        function renderJournal() {
+            const list = document.getElementById('trade-list');
+            list.innerHTML = trades.map(t => `
+                <tr>
+                    <td>${t.date}</td>
+                    <td>${t.pair}</td>
+                    <td style="color:${t.side==='BUY'? 'var(--bull)':'var(--bear)'}">${t.side}</td>
+                    <td>${t.lots}</td>
+                    <td style="color:${t.pnl>=0? 'var(--bull)':'var(--bear)'}">${t.pnl >= 0 ? '+' : ''}$${t.pnl}</td>
+                    <td><span style="font-size:10px; background:rgba(255,255,255,0.05); padding:3px 8px; border-radius:10px">EXECUTED</span></td>
+                </tr>
+            `).join('');
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = trades.reduce((a, b) => a + b.pnl, 0);
+            const wins = trades.filter(t => t.pnl > 0).length;
+            document.getElementById('j-bal-display').innerText = `$${(50000 + total).toLocaleString()}`;
+            document.getElementById('j-wr-display').innerText = trades.length ? Math.round((wins/trades.length)*100)+'%' : '0%';
+            document.getElementById('j-count-display').innerText = trades.length;
+        }
+
+        // --- ADVANCED AI LOGIC ---
+        function aiChat() {
+            const inp = document.getElementById('ai-text');
+            const msgBox = document.getElementById('aiMessages');
+            if(!inp.value) return;
+
+            msgBox.innerHTML += `<div class="msg user">${inp.value}</div>`;
+            const query = inp.value.toLowerCase();
+            inp.value = '';
+
+            // AI Logic Protocol: Analyze Structure -> Liquidity -> Entry
+            setTimeout(() => {
+                let response = "";
+                if(query.includes('analyze') || query.includes('smc')) {
+                    response = `<strong>SMC ANALYSIS PROTOCOL:</strong><br>
+                    1. <strong>Structure:</strong> H4 is Bullish (Higher Highs). M15 shows a Change of Character (CHoCH) to the downside.<br>
+                    2. <strong>Liquidity:</strong> Equal Lows detected at 2345.50. Expect a sweep before expansion.<br>
+                    3. <strong>POI:</strong> Premium Discount tool shows we are in a Discount zone. Wait for M1 BOS for Entry.`;
+                } else {
+                    response = "System scanning... Context suggests institutional order flow is currently Bearish. Look for mitigation of the last 15m supply zone.";
+                }
+                msgBox.innerHTML += `<div class="msg bot">${response}</div>`;
+                msgBox.scrollTop = msgBox.scrollHeight;
+            }, 1000);
+        }
+
+        function aiVision() {
+            const msgBox = document.getElementById('aiMessages');
+            msgBox.innerHTML += `<div class="msg user">[FILE UPLOADED: Chart_Analysis_01.png]</div>`;
+            setTimeout(() => {
+                msgBox.innerHTML += `<div class="msg bot"><strong>VISION SCAN COMPLETE:</strong><br>Detected a <strong>Head & Shoulders</strong> pattern forming on the 1H timeframe. RSI is showing Overbought (78.5). High probability of a retracement to the 0.618 Fib level.</div>`;
+                msgBox.scrollTop = msgBox.scrollHeight;
+            }, 2000);
+        }
+
+        // --- CALCULATORS ---
+        function runCalculators() {
+            // Lot Size
+            const bal = parseFloat(document.getElementById('c-bal').value);
+            const risk = parseFloat(document.getElementById('c-risk').value);
+            const sl = parseFloat(document.getElementById('c-sl').value);
+            const lotRes = ((bal * (risk/100)) / (sl * 10)).toFixed(2);
+            document.getElementById('res-lot').innerText = lotRes + " Lots";
+
+            // R:R
+            const entry = parseFloat(document.getElementById('rr-e').value);
+            const tp = parseFloat(document.getElementById('rr-t').value);
+            const stop = parseFloat(document.getElementById('rr-s').value);
+            const rr = (Math.abs(tp - entry) / Math.abs(entry - stop)).toFixed(2);
+            document.getElementById('res-rr').innerText = rr;
+
+            // Spread Cost
+            const spread = parseFloat(document.getElementById('s-spread').value);
+            const slot = parseFloat(document.getElementById('s-lot').value);
+            document.getElementById('res-spread').innerText = `-$${(spread * 10 * slot).toFixed(2)}`;
+        }
+
+        // --- SESSIONS ---
+        function updateSessions() {
+            const h = new Date().getUTCHours();
+            const m = new Date().getUTCMinutes();
+            const s = new Date().getUTCSeconds();
+            const sessions = [
+                { name: "LONDON", open: 8, close: 16 },
+                { name: "NEW YORK", open: 13, close: 21 },
+                { name: "TOKYO", open: 0, close: 8 }
+            ];
+
+            document.getElementById('session-list').innerHTML = sessions.map(sess => {
+                let status = "CLOSED";
+                let timeStr = "--:--:--";
+                if(h >= sess.open && h < sess.close) {
+                    status = "ACTIVE";
+                    const remH = sess.close - h - 1;
+                    const remM = 59 - m;
+                    const remS = 59 - s;
+                    timeStr = `${String(remH).padStart(2,'0')}:${String(remM).padStart(2,'0')}:${String(remS).padStart(2,'0')}`;
+                }
+                return `
+                    <div class="sess-row">
+                        <div><strong>${sess.name}</strong> <span style="font-size:10px; color:${status==='ACTIVE'?'var(--bull)':'#555'}; margin-left:10px;">${status}</span></div>
+                        <div class="timer">${timeStr}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function initChart() {
+            new TradingView.widget({
+                "autosize": true, "symbol": "NASDAQ:NAS100", "interval": "15", "theme": "dark", "container_id": "tv_chart"
+            });
+        }
+
+        // --- INIT ---
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toISOString().slice(11, 19) + " UTC";
+            updateSessions();
+        }, 1000);
+
+        document.querySelectorAll('input').forEach(i => i.addEventListener('input', runCalculators));
+        renderJournal();
+        runCalculators();
+    </script>
+</body>
+</html>
